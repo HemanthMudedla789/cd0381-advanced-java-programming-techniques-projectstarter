@@ -3,15 +3,14 @@ package com.udacity.webcrawler.profiler;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.Writer;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Objects;
-import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
 final class ProfilerImpl implements Profiler {
   private final Clock clock;
@@ -53,19 +52,35 @@ final class ProfilerImpl implements Profiler {
   }
 
   @Override
-  public void writeData(Path path) throws IOException {
-    // Write data to the specified path, appending if the file exists
-    try (Writer writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE,
-            StandardOpenOption.APPEND)) {
-      writeData(writer);
+  public void writeData(Path path) {
+    // If path is null, write to System.out
+    if (path != null) {
+      try (Writer writer = Files.newBufferedWriter(path)) {
+        writeData(writer);
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to write profile data", e);
+      }
+    } else {
+      // Don't use try-with-resources here to avoid closing System.out
+      writeData(new OutputStreamWriter(System.out));
     }
   }
 
   @Override
-  public void writeData(Writer writer) throws IOException {
-    writer.write("Run at " + RFC_1123_DATE_TIME.format(startTime));
-    writer.write(System.lineSeparator());
-    state.write(writer);
-    writer.write(System.lineSeparator());
+  public void writeData(Writer writer) {
+    Objects.requireNonNull(writer);
+    try {
+      writer.write("{\n");
+      writer.write("  \"startTime\": \"");
+      writer.write(startTime.toString());
+      writer.write("\",\n");
+      writer.write("  \"results\": [\n");
+      state.write(writer);
+      writer.write("  ]\n");
+      writer.write("}");
+      writer.flush();
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to write profile data", e);
+    }
   }
 }

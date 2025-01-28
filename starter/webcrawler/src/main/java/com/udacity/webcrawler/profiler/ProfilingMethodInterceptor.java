@@ -42,6 +42,9 @@ final class ProfilingMethodInterceptor implements InvocationHandler {
     } catch (InvocationTargetException e) {
       // If the method throws an exception, rethrow the original exception
       throw e.getTargetException();
+    } catch (IllegalAccessException e) {
+      // Wrap IllegalAccessException in RuntimeException to avoid UndeclaredThrowableException
+      throw new RuntimeException("Failed to invoke profiled method", e);
     } finally {
       // Record the duration even if an exception was thrown
       Duration duration = Duration.between(start, clock.instant());

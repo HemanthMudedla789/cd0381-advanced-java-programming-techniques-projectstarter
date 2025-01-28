@@ -43,10 +43,9 @@ public final class WebCrawlerMain {
       // If path is specified, write to the file
       resultWriter.write(Path.of(resultPath));
     } else {
-      // If no path specified, write to System.out
-      try (Writer systemOut = new OutputStreamWriter(System.out)) {
-        resultWriter.write(systemOut);
-      }
+      Writer systemOut = new OutputStreamWriter(System.out);
+      resultWriter.write(systemOut);
+      systemOut.flush();
     }
 
     // TODO: Write the profile data to a text file (or System.out if the file name is empty)
@@ -54,9 +53,9 @@ public final class WebCrawlerMain {
     if (!profileOutputPath.isEmpty()) {
       profiler.writeData(Path.of(profileOutputPath));
     } else {
-      try (Writer systemOut = new OutputStreamWriter(System.out)) {
-        profiler.writeData(systemOut);
-      }
+      Writer systemOut = new OutputStreamWriter(System.out);
+      profiler.writeData(systemOut);
+      systemOut.flush();
     }
   }
 
